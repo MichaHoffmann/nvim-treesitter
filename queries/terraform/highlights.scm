@@ -1,15 +1,21 @@
 ; inherits: hcl
 
-; { key: val }
+; Terraform specific references
 ;
-; highlight identifier keys as though they were block attributes
-(object_elem key: (expression (variable_expr (identifier) @field)))
+;
+; local/module/data/var/output
+(expression (variable_expr (identifier) @type.builtin (#any-of? @type.builtin "data" "var" "local" "module" "output")) (get_attr (identifier) @field))
 
-((identifier) @keyword (#any-of? @keyword "module" "root" "cwd" "resource" "variable" "data" "locals" "terraform" "provider" "output"))
+; path.root/cwd/module
+(expression (variable_expr (identifier) @type.builtin (#eq? @type.builtin "path")) (get_attr (identifier) @variable.builtin (#any-of? @variable.builtin "root" "cwd" "module")))
+
+; terraform.workspace
+(expression (variable_expr (identifier) @type.builtin (#eq? @type.builtin "terraform")) (get_attr (identifier) @variable.builtin (#any-of? @variable.builtin "workspace")))
+
+; Terraform specific keywords
+
+; FIXME: ideally only for identifiers under a `variable` block to minimize false positives
 ((identifier) @type.builtin (#any-of? @type.builtin "bool" "string" "number" "object" "tuple" "list" "map" "set" "any"))
-(variable_expr (identifier) @variable.builtin (#any-of? @variable.builtin "var" "local" "path"))
-(get_attr (identifier) @variable.builtin (#any-of? @variable.builtin  "root" "cwd" "module"))
-
 (object_elem val: (expression
   (variable_expr
     (identifier) @type.builtin (#any-of? @type.builtin "bool" "string" "number" "object" "tuple" "list" "map" "set" "any"))))
